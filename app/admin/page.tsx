@@ -2,9 +2,10 @@ import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
 import ProjectsEditor from "@/components/admin/ProjectsEditor";
+import EducationEditor from "@/components/admin/EducationEditor";
 import PasswordGate from "@/components/admin/PasswordGate";
 import { ADMIN_COOKIE, isValidSession } from "@/lib/admin-auth";
-import { getProjects } from "@/lib/content";
+import { getEducation, getProjects } from "@/lib/content";
 
 export const metadata: Metadata = {
   title: "Edit projects",
@@ -27,5 +28,13 @@ export default async function AdminPage() {
   // the gate can't be skipped from devtools.
   if (!isValidSession(token)) return <PasswordGate />;
 
-  return <ProjectsEditor initial={await getProjects()} />;
+  const [projects, education] = await Promise.all([getProjects(), getEducation()]);
+  return (
+    <>
+      <ProjectsEditor initial={projects} />
+      <div className="wrap pb-16" style={{ maxWidth: "52rem" }}>
+        <EducationEditor initial={education} />
+      </div>
+    </>
+  );
 }
