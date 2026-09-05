@@ -12,6 +12,11 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Unrelated scaffolding that happens to share this folder.
+    "src/**",
+    "workspace/**",
+    "stringkit/**",
+    "tests/**",
   ]),
 ]);
 

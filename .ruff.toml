@@ -1,0 +1,6 @@
+[tool.ruff]
+# Enable all default rules and some additional ones
+select = ["E", "F", "W", "C90", "N", "B", "SIM", "Q"]
+ignore = []
+line-length = 88
+target-version = "py39"

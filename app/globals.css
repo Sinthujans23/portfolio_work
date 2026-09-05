@@ -1,26 +1,618 @@
-@import "tailwindcss";
+/* `source(none)` turns off automatic file detection, which would otherwise
+   scan the unrelated scaffolding in src/ and workspace/ and emit utilities
+   this site never uses. The three @source lines are the real surface. */
+@import "tailwindcss" source(none);
+@source "../app";
+@source "../components";
+@source "../lib";
 
+/* Tailwind v4 dark mode via .dark class */
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-mono-jb), ui-monospace, SFMono-Regular, monospace;
+}
+
+/* ─── Tokens ───────────────────────────────────────────────
+   A neutral ramp, plus five muted hues. Each section claims one
+   via --section-accent and everything inside it — the section
+   number, bullets, tag hovers, focus rings — inherits that hue.
+   Colour identifies where you are; it never decorates. */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg:            #fcfcfc;
+  --bg-subtle:     #f6f6f5;
+  --surface:       #ffffff;
+  --surface-hover: #fafafa;
+
+  --border:        #e6e6e4;
+  --border-strong: #d2d2ce;
+
+  --text:          #17171a;
+  --text-2:        #57575e;
+  --text-3:        #6c6c75; /* 4.8:1 on --bg-subtle — AA for small text */
+
+  --accent:        #2a5bd7;
+  --accent-hover:  #1e47b0;
+  --accent-soft:   rgba(42, 91, 215, 0.08);
+
+  /* Close to --surface on purpose: the blur is what should read, not a
+     colour shift. Keeping it near-opaque is also what protects the text
+     contrast that every token below was tuned for. */
+  --glass:         rgba(255, 255, 255, 0.72);
+  --glass-edge:    rgba(255, 255, 255, 0.55);
+
+  --c-blue:   #2a5bd7; /* 5.3:1 on --bg-subtle */
+  --c-violet: #6248d8; /* 5.6:1 */
+  --c-teal:   #0d7268; /* 5.3:1 — the section numbers are small text, so
+                          every hue here clears WCAG AA at 4.5:1 */
+  --c-amber:  #8f5609; /* 5.5:1 */
+  --c-rose:   #b8395c; /* 5.1:1 */
+
+  /* Overridden per <section>; falls back to the house accent. */
+  --section-accent: var(--accent);
+
+  --maxw: 68rem;
+  --radius: 10px;
+
+  --header-h: 4rem;   /* matches the h-16 header */
+  --section-pad: clamp(4.5rem, 9vw, 7rem);
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+.dark {
+  --bg:            #0c0c0e;
+  --bg-subtle:     #121215;
+  --surface:       #141417;
+  --surface-hover: #1a1a1e;
+
+  --border:        #26262b;
+  --border-strong: #35353c;
+
+  --text:          #f2f2f3;
+  --text-2:        #a3a3ac;
+  --text-3:        #80808a; /* 4.7:1 on --surface — AA for small text */
+
+  --accent:        #7ba2ff;
+  --accent-hover:  #9db9ff;
+  --accent-soft:   rgba(123, 162, 255, 0.10);
+
+  --glass:         rgba(24, 24, 28, 0.66);
+  --glass-edge:    rgba(255, 255, 255, 0.06);
+
+  /* Lifted and desaturated so they read on near-black. */
+  --c-blue:   #7ba2ff;
+  --c-violet: #a494ff;
+  --c-teal:   #46c9b8;
+  --c-amber:  #dda45f;
+  --c-rose:   #f2879f;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+/* Everything below lives in Tailwind's layers so utility classes
+   (`hidden`, `sr-only`, `px-6`, …) still win over these defaults. */
+
+@layer base {
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html {
+    scroll-behavior: smooth;
+    /* No scroll-padding-top here. It ADDS to the target's scroll-margin-top,
+       and the sections already carry generous top padding of their own — the
+       three stacked left ~208px of dead space above a heading after a jump.
+       The offset lives on .section alone. */
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    background-color: var(--bg);
+    color: var(--text);
+    font-family: var(--font-sans);
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    overflow-x: hidden;
+  }
+
+  body, header, section, footer, input, textarea, button {
+    transition: background-color 0.25s ease, border-color 0.25s ease, color 0.25s ease;
+  }
+
+  a { color: inherit; }
+
+  ::selection { background: var(--text); color: var(--bg); }
+
+  /* Film grain over the whole page. Sits above the sections but below the
+     header (z-50) and command palette (z-100), and never takes a pointer
+     event. Low enough to read as texture rather than noise. */
+  body::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    opacity: 0.028;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+  .dark body::after { opacity: 0.05; }
+
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+    border-radius: 3px;
+  }
+
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb {
+    background: var(--border-strong);
+    border: 3px solid var(--bg);
+    border-radius: 10px;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@layer components {
+  /* ─── Layout ─── */
+  .wrap {
+    width: 100%;
+    max-width: var(--maxw);
+    margin-inline: auto;
+    padding-inline: 1.5rem;
+  }
+
+  .section {
+    padding-block: var(--section-pad);
+    /* Subtracting the section's own top padding cancels it exactly, so the
+       *heading* — not the section box — lands 1.5rem below the header at
+       every viewport width. Goes negative on wide screens, which is legal
+       and is the whole point: without it the padding shows up as dead space
+       above the heading after a jump. */
+    scroll-margin-top: calc(var(--header-h) + 1.5rem - var(--section-pad));
+  }
+
+  /* ─── Type ─── */
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--text-3);
+  }
+
+  .h1 {
+    font-size: clamp(2.4rem, 6vw, 3.9rem);
+    font-weight: 600;
+    line-height: 1.05;
+    letter-spacing: -0.035em;
+  }
+
+  .h2 {
+    font-size: clamp(1.6rem, 3.2vw, 2.15rem);
+    font-weight: 600;
+    line-height: 1.15;
+    letter-spacing: -0.025em;
+  }
+
+  .h3 {
+    font-size: 1.0625rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+
+  .lede {
+    font-size: 1.0625rem;
+    line-height: 1.7;
+    color: var(--text-2);
+    max-width: 46ch;
+  }
+
+  .mono {
+    font-family: var(--font-mono);
+    font-size: 0.8125rem;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ─── Surfaces ─── */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    transition: border-color 0.25s ease, box-shadow 0.25s ease;
+  }
+
+  /* ─── Glass ───
+     Only worth using where something is actually behind it: the header over
+     scrolling content, the hero card over the aurora, the palette and the
+     mobile sheet over the page. On a plain section background it would just
+     be a flat panel with a performance cost.
+
+     The @supports guard matters — without backdrop-filter the translucent
+     background alone would drop text onto whatever is behind it and wreck
+     the contrast. Unsupported browsers keep the solid surface. */
+  .glass { background: var(--surface); }
+
+  @supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    .glass {
+      background: var(--glass);
+      -webkit-backdrop-filter: blur(16px) saturate(180%);
+      backdrop-filter: blur(16px) saturate(180%);
+    }
+    /* A light top edge is what sells it as a pane rather than a tint. */
+    .glass-edge { border-color: var(--glass-edge); }
+  }
+
+  /* A card that reacts to the pointer. The shadow is tinted with the
+     section's hue rather than plain black, which is what stops it
+     reading as a generic bootstrap lift. */
+  .card-hover:hover {
+    border-color: color-mix(in srgb, var(--section-accent) 32%, var(--border));
+    box-shadow: 0 1px 2px rgb(0 0 0 / 0.03),
+      0 12px 32px -12px color-mix(in srgb, var(--section-accent) 30%, transparent);
+  }
+
+  /* Hairline that wipes across the top of the featured card on reveal. */
+  .accent-rule {
+    height: 2px;
+    border-radius: 2px;
+    background: linear-gradient(
+      90deg,
+      var(--section-accent),
+      color-mix(in srgb, var(--section-accent) 30%, transparent)
+    );
+  }
+
+  /* List rows: the marker and the metadata pick up the hue on hover. */
+  .row .row-marker { transition: background-color 0.25s ease, transform 0.25s ease; }
+  .row:hover .row-marker {
+    background-color: var(--section-accent);
+    transform: scale(1.6);
+  }
+  .row .row-meta { transition: color 0.25s ease; }
+  .row:hover .row-meta { color: var(--section-accent); }
+
+  /* ─── Buttons ─── */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    height: 2.625rem;
+    padding-inline: 1.125rem;
+    border-radius: 8px;
+    border: 1px solid transparent;
+    font-size: 0.875rem;
+    font-weight: 500;
+    line-height: 1;
+    text-decoration: none;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background-color 0.18s ease, border-color 0.18s ease,
+      color 0.18s ease, opacity 0.18s ease;
+  }
+
+  .btn-primary { background: var(--text); color: var(--bg); }
+  .btn-primary:hover { opacity: 0.86; }
+  .btn-primary:disabled { opacity: 0.5; cursor: default; }
+
+  .btn-ghost {
+    background: transparent;
+    color: var(--text);
+    border-color: var(--border-strong);
+  }
+  .btn-ghost:hover { background: var(--bg-subtle); border-color: var(--text-3); }
+
+  .btn-sm { height: 2.25rem; padding-inline: 0.875rem; font-size: 0.8125rem; }
+
+  .icon-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.375rem;
+    height: 2.375rem;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-2);
+    cursor: pointer;
+    transition: color 0.18s ease, border-color 0.18s ease, background-color 0.18s ease;
+  }
+  .icon-btn:hover {
+    color: var(--text);
+    border-color: var(--border-strong);
+    background: var(--bg-subtle);
+  }
+
+  /* ─── Small pieces ─── */
+  .tag {
+    display: inline-flex;
+    align-items: center;
+    height: 1.625rem;
+    padding-inline: 0.5rem;
+    border-radius: 5px;
+    border: 1px solid var(--border);
+    background: var(--bg-subtle);
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    color: var(--text-2);
+    white-space: nowrap;
+    transition: color 0.2s ease, border-color 0.2s ease, background-color 0.2s ease;
+  }
+  /* No color-mix on the background: its fallback is the solid accent, which
+     would put accent-coloured text on an accent-coloured chip. The border
+     keeps the mix — a solid border is a fine thing to degrade into. */
+  .tag:hover {
+    color: var(--section-accent);
+    border-color: color-mix(in srgb, var(--section-accent) 45%, var(--border));
+    background: var(--bg-subtle);
+  }
+
+  /* Underline wipes out from the left instead of switching on. */
+  .link-underline {
+    color: var(--accent);
+    text-decoration: none;
+    background-image: linear-gradient(currentColor, currentColor);
+    background-repeat: no-repeat;
+    background-position: 0 100%;
+    background-size: 0% 1px;
+    transition: background-size 0.28s cubic-bezier(0.22, 1, 0.36, 1), color 0.18s ease;
+  }
+  .link-underline:hover { color: var(--accent-hover); background-size: 100% 1px; }
+
+  /* ─── Pointer spotlight ───
+     A soft highlight that tracks the cursor across a card, tinted with the
+     section's hue. --mx/--my are written by the pointermove handler; the
+     50% fallback keeps it centred before the pointer ever arrives.
+     The tint lives in the layer's `opacity`, not in the colour. A
+     color-mix() here compiles to a *solid* accent fallback on browsers
+     without it (Firefox < 113 is inside Next's support range), which would
+     paint a hard blob instead of a soft glow. */
+  .spotlight { position: relative; }
+  .spotlight::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.35s ease;
+    background: radial-gradient(
+      16rem circle at var(--mx, 50%) var(--my, 50%),
+      var(--section-accent) 0%,
+      transparent 70%
+    );
+  }
+  .spotlight:hover::after { opacity: 0.11; }
+
+  /* ─── Hero dot grid ───
+     Structure under the aurora. Masked to an ellipse so it dissolves
+     rather than ending on a hard edge. */
+  .dot-grid {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background-image: radial-gradient(circle at 1px 1px, var(--border-strong) 1px, transparent 0);
+    background-size: 30px 30px;
+    opacity: 0.45;
+    mask-image: radial-gradient(58% 55% at 50% 38%, #000 0%, transparent 100%);
+  }
+
+  /* Off-screen until focused, then a plain button in the top-left. */
+  .skip-link {
+    position: absolute;
+    left: -9999px;
+    top: 0;
+    z-index: 60;
+  }
+  .skip-link:focus {
+    left: 0.75rem;
+    top: 0.75rem;
+    position: fixed;
+  }
+
+  /* ─── Forms ─── */
+  .field {
+    width: 100%;
+    padding: 0.6875rem 0.875rem;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--text);
+    font-family: inherit;
+    font-size: 0.9375rem;
+    line-height: 1.5;
+    outline: none;
+    transition: border-color 0.18s ease, box-shadow 0.18s ease;
+  }
+  .field::placeholder { color: var(--text-3); }
+  .field:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-soft);
+    outline: none;
+  }
+
+  .label {
+    display: block;
+    margin-bottom: 0.375rem;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--text-2);
+  }
+
+  /* ─── Portrait ───
+     The source is a full-body shot at 1218×1600, so the circle shows a
+     430×430 region at (360, 248) — head and shoulders, eyes ~40% down,
+     which is where a headshot expects them. The percentages are that
+     region expressed against the container (width 1218/430, left
+     −360/430, top −248/430), so the framing holds at any size.
+     Override the three variables to nudge it. */
+  .portrait {
+    position: relative;
+    overflow: hidden;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background: var(--bg-subtle);
+    /* --accent-soft rather than a color-mix: Lightning CSS falls back to
+       the *solid* accent on browsers without color-mix, and a 6px solid
+       blue ring is a bad thing to degrade into. */
+    box-shadow:
+      0 0 0 1px var(--border-strong),
+      0 0 0 6px var(--accent-soft),
+      0 12px 30px -18px rgb(0 0 0 / 0.35);
+  }
+
+  .portrait img {
+    position: absolute;
+    max-width: none; /* preflight caps images at 100%, which would undo the crop */
+    width: var(--portrait-w, 283.3%);
+    height: auto;
+    left: var(--portrait-left, -83.7%);
+    top: var(--portrait-top, -57.7%);
+  }
+
+  /* ─── Hero backdrop ───
+     Two slow-drifting colour fields behind the hero. Blurred far past
+     the point of any visible edge, so it reads as a tint on the page
+     rather than as shapes sitting on top of it. */
+  .aurora {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+    z-index: 0;
+    /* Fade out toward the bottom so it never fights the next section. */
+    mask-image: linear-gradient(to bottom, #000 55%, transparent 100%);
+  }
+
+  .aurora::before,
+  .aurora::after {
+    content: "";
+    position: absolute;
+    width: 45rem;
+    height: 45rem;
+    border-radius: 50%;
+    filter: blur(90px);
+    will-change: transform;
+  }
+
+  .aurora::before {
+    top: -18rem;
+    left: -12rem;
+    background: radial-gradient(
+      circle,
+      color-mix(in srgb, var(--c-blue) 34%, transparent) 0%,
+      transparent 68%
+    );
+    animation: drift-a 24s ease-in-out infinite;
+  }
+
+  .aurora::after {
+    top: -10rem;
+    right: -16rem;
+    background: radial-gradient(
+      circle,
+      color-mix(in srgb, var(--c-violet) 30%, transparent) 0%,
+      transparent 68%
+    );
+    animation: drift-b 30s ease-in-out infinite;
+  }
+
+  .dark .aurora::before,
+  .dark .aurora::after { filter: blur(110px); opacity: 0.75; }
+
+  /* Two 720px blurred layers are wasted work on a phone — shrink them
+     rather than compositing surfaces wider than the viewport. */
+  @media (max-width: 48rem) {
+    .aurora::before,
+    .aurora::after {
+      width: 24rem;
+      height: 24rem;
+      filter: blur(60px);
+    }
+    .aurora::before { top: -8rem; left: -8rem; }
+    .aurora::after { top: -6rem; right: -8rem; }
+  }
+
+  /* Ring that breathes outward from the availability dot. */
+  .pulse-dot { position: relative; }
+  .pulse-dot::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: inherit;
+    animation: pulse-ring 2.4s ease-out infinite;
+  }
+}
+
+@keyframes drift-a {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  50%      { transform: translate3d(6rem, 3rem, 0) scale(1.12); }
+}
+
+@keyframes drift-b {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1.08); }
+  50%      { transform: translate3d(-5rem, 4rem, 0) scale(1); }
+}
+
+@keyframes pulse-ring {
+  0%   { transform: scale(1);   opacity: 0.7; }
+  70%  { transform: scale(3.2); opacity: 0; }
+  100% { transform: scale(3.2); opacity: 0; }
+}
+
+/* ─── View transitions ───
+   Unlayered on purpose — nothing in Tailwind targets these pseudo-elements,
+   and they must not be purged or overridden.
+
+   Two different transitions share the one root, so each is scoped by the
+   `data-vt` attribute that runViewTransition() stamps on <html>. Without
+   that scoping, jumping to a section would inherit the theme toggle's
+   circular clip and wipe out from wherever the toggle happens to be. */
+
+/* Theme switch — circular reveal from the toggle button. */
+:root[data-vt="theme"]::view-transition-old(root) { animation: none; z-index: 0; }
+:root[data-vt="theme"]::view-transition-new(root) {
+  animation: theme-reveal 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  z-index: 1;
+}
+
+/* Section navigation — the outgoing view falls away, the incoming one
+   settles up into place. Short, because the scroll itself is instant and a
+   slow fade would just feel like lag. */
+:root[data-vt="nav"]::view-transition-old(root) {
+  animation: vt-nav-out 0.16s ease both;
+}
+:root[data-vt="nav"]::view-transition-new(root) {
+  animation: vt-nav-in 0.34s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* The header is identical either side of a jump, so give it its own
+   snapshot — otherwise it rides along with the page and appears to lift. */
+header { view-transition-name: site-header; }
+:root[data-vt="nav"]::view-transition-group(site-header) { animation-duration: 0.2s; }
+
+@keyframes theme-reveal {
+  from { clip-path: circle(0% at var(--tx, 50%) var(--ty, 50%)); }
+  to   { clip-path: circle(150% at var(--tx, 50%) var(--ty, 50%)); }
+}
+
+@keyframes vt-nav-out {
+  to { opacity: 0; }
+}
+
+@keyframes vt-nav-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  ::view-transition-old(root), ::view-transition-new(root),
+  ::view-transition-old(site-header), ::view-transition-new(site-header) {
+    animation: none !important;
+  }
 }

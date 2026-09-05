@@ -1,0 +1,59 @@
+[
+  {
+    "id": "pms",
+    "title": "Performance Management System",
+    "context": "Team project · Full stack",
+    "team": true,
+    "featured": true,
+    "summary": "A centralised platform for running employee performance evaluations through a multi-level organisational workflow. Each level reviews the level below it, and every evaluation moves through an approval chain before it counts.",
+    "detail": [
+      "Built the evaluation and approval workflow end to end — team management, employee evaluation, review, approval, rejection and status tracking.",
+      "Implemented the My Team view, with employee search, evaluation-status filtering and status-wise employee counts.",
+      "Built the evaluation interfaces covering performance objectives, targets, achievements, ratings, overall scores and feedback.",
+      "Implemented the multi-level approval and rejection flows, including reason and comment handling and the status updates that follow from them.",
+      "Developed the Enquiry and Notification modules for evaluation disputes and workflow updates.",
+      "Integrated the frontend with Flask REST APIs and Supabase PostgreSQL, with role-based access following the organisational hierarchy."
+    ],
+    "stack": [
+      "Next.js",
+      "React",
+      "TypeScript",
+      "Tailwind CSS",
+      "Python Flask",
+      "REST API",
+      "Supabase PostgreSQL",
+      "Azure AD SSO",
+      "LLM APIs"
+    ]
+  },
+  {
+    "id": "blogapp",
+    "title": "BlogApp",
+    "context": "Team project · Full stack",
+    "team": true,
+    "featured": false,
+    "summary": "A blogging platform with dynamic post management, a Markdown editor that previews as you type, search across published posts, and profile administration.",
+    "detail": [
+      "Built the authentication engine: secure login and session management with role-based access.",
+      "Developed the Markdown editor, with live preview, formatting controls and draft saving.",
+      "Implemented the full post CRUD lifecycle — creation, inline editing and deletion behind confirmation modals.",
+      "Engineered post discovery with real-time text search and detailed post views.",
+      "Designed a personalised profile dashboard showing activity metrics and post management controls."
+    ],
+    "stack": ["Next.js", "React", "Node.js", "REST APIs", "Markdown parser", "Tailwind CSS"]
+  },
+  {
+    "id": "cnc",
+    "title": "CNC Paper Board Cutting Machine",
+    "context": "Team project · Microcontroller",
+    "team": true,
+    "featured": false,
+    "summary": "An automated CNC machine that cuts paper board from G-code, driven by an ESP32 coordinating stepper motors, servo motors and optical sensors.",
+    "detail": [
+      "Implemented the LCD operator interface and the servo motor control for machine operation.",
+      "Integrated and synchronised the paper feeding mechanism with the cutting process.",
+      "Designed the machine's 3D components in Blender."
+    ],
+    "stack": ["ESP32", "CNC Shield", "NEMA 17", "DRV8825", "TCRT5000", "GRBL", "Inkscape", "Blender"]
+  }
+]
