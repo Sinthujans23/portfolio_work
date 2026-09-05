@@ -1,8 +1,8 @@
 import SectionHeading from "./SectionHeading";
 import Reveal from "./Reveal";
-import { personalInfo } from "@/lib/data";
+import type { Profile } from "@/lib/content";
 
-export default function About() {
+export default function About({ personalInfo }: { personalInfo: Profile }) {
   return (
     <section
       id="about"

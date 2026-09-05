@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import ProjectsEditor from "@/components/admin/ProjectsEditor";
 import PasswordGate from "@/components/admin/PasswordGate";
 import { ADMIN_COOKIE, isValidSession } from "@/lib/admin-auth";
-import { projects } from "@/lib/data";
+import { getProjects } from "@/lib/content";
 
 export const metadata: Metadata = {
   title: "Edit projects",
@@ -27,5 +27,5 @@ export default async function AdminPage() {
   // the gate can't be skipped from devtools.
   if (!isValidSession(token)) return <PasswordGate />;
 
-  return <ProjectsEditor initial={projects} />;
+  return <ProjectsEditor initial={await getProjects()} />;
 }

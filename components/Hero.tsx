@@ -5,7 +5,7 @@ import Image from "next/image";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { ArrowDown, Mail } from "lucide-react";
 import { GithubIcon, LinkedinIcon } from "./SocialIcons";
-import { personalInfo } from "@/lib/data";
+import type { Profile } from "@/lib/content";
 
 const EASE = [0.22, 1, 0.36, 1] as const;
 
@@ -34,7 +34,7 @@ function NameReveal({ text }: { text: string }) {
   );
 }
 
-export default function Hero() {
+export default function Hero({ personalInfo }: { personalInfo: Profile }) {
   const ref = useRef<HTMLElement>(null);
 
   // Depth on scroll: the backdrop trails the content instead of moving with

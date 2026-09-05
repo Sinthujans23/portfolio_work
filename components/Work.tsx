@@ -1,11 +1,11 @@
 "use client";
 
 import { useCallback } from "react";
-import { ArrowUpRight } from "lucide-react";
+import { ArrowUpRight, Plus } from "lucide-react";
 import { motion } from "framer-motion";
 import SectionHeading from "./SectionHeading";
 import Reveal from "./Reveal";
-import { projects, type Project } from "@/lib/data";
+import type { Project } from "@/lib/data";
 
 function Links({ project }: { project: Project }) {
   if (!project.repo && !project.live) return null;
@@ -91,7 +91,7 @@ function DetailList({
   );
 }
 
-export default function Work() {
+export default function Work({ projects }: { projects: Project[] }) {
   const featured = projects.find((p) => p.featured);
   const rest = projects.filter((p) => !p.featured);
 
@@ -111,12 +111,27 @@ export default function Work() {
       style={{ "--section-accent": "var(--c-violet)" } as React.CSSProperties}
     >
       <div className="wrap">
-        <SectionHeading
-          index="02"
-          eyebrow="Work"
-          title="Projects"
-          description="What I've built, and which parts of it were mine."
-        />
+        <div className="flex items-start justify-between gap-6">
+          <SectionHeading
+            index="02"
+            eyebrow="Work"
+            title="Projects"
+            description="What I've built, and which parts of it were mine."
+          />
+
+          {/* Only while running locally. /admin 404s in production, so on the
+              live site this would be a button that goes nowhere. */}
+          {process.env.NODE_ENV !== "production" && (
+            <a
+              href="/admin"
+              className="btn btn-ghost btn-sm mt-1 shrink-0"
+              title="Local project editor — development only"
+            >
+              <Plus size={15} />
+              Add project
+            </a>
+          )}
+        </div>
 
         {featured && (
           <Reveal>

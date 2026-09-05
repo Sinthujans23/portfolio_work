@@ -1,8 +1,8 @@
 import SectionHeading from "./SectionHeading";
 import Reveal from "./Reveal";
-import { education } from "@/lib/data";
+import type { Education } from "@/lib/content";
 
-export default function Education() {
+export default function Education({ education }: { education: Education[] }) {
   return (
     <section
       id="education"

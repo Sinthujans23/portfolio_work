@@ -2,12 +2,12 @@
 
 import { motion } from "framer-motion";
 import SectionHeading from "./SectionHeading";
-import { skills } from "@/lib/data";
+import type { SkillGroup } from "@/lib/content";
 
 // One hue per group, so the eye can tell the five rows apart at a glance.
 const HUES = ["var(--c-blue)", "var(--c-violet)", "var(--c-teal)", "var(--c-amber)", "var(--c-rose)"];
 
-export default function Skills() {
+export default function Skills({ skills }: { skills: SkillGroup[] }) {
   return (
     <section
       id="skills"

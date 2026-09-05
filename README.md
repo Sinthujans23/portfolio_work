@@ -92,6 +92,68 @@ Validation rejects a save outright (nothing is written) if any project is missin
 duplicated, a project has no stack entries, or the number of featured projects is
 not exactly one.
 
+## Database (Supabase)
+
+The site reads content from Supabase when it is configured and has rows, and
+falls back to `lib/data.ts` / `content/projects.json` otherwise. That fallback
+is load-bearing: a fresh clone with no `.env.local`, a schema that has not been
+seeded yet, or Supabase being unreachable mid-deploy all still render a correct
+site instead of a blank one. Every fallback logs a `[content]` line during
+`next build`, so a misconfiguration is visible rather than silent.
+
+### Setting it up
+
+In the Supabase SQL editor, run in this order:
+
+```
+db/reset.sql    -- only if the tables already exist in some other shape
+db/schema.sql   -- tables, constraints, indexes, RLS
+db/seed.sql     -- the current content
+```
+
+Then in `.env.local`:
+
+```
+NEXT_PUBLIC_SUPABASE_URL=https://<project-ref>.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=<anon or publishable key>
+```
+
+Both must start with `NEXT_PUBLIC_`, and env var names cannot contain spaces —
+a name like `supabasePublishable key` is silently never read. The anon key is
+meant to be public; RLS is what protects the data. A `service_role`/secret key
+must never go in a `NEXT_PUBLIC_` variable.
+
+### Order matters
+
+`schema.sql` uses `create table if not exists`, so it does **nothing** to a
+table that already exists with different columns — it skips it without error,
+and the mismatch only shows up later as `column ... does not exist`. If the
+tables were created any other way (the Supabase Table Editor, for instance),
+run `db/reset.sql` first. It drops them, so check they are empty.
+
+| file | what it is |
+| --- | --- |
+| `db/schema.sql` | 8 tables, constraints, indexes, `updated_at` triggers, RLS policies |
+| `db/seed.sql` | current content, generated from the real data; idempotent |
+| `db/queries.sql` | the reads each section needs, plus a single-round-trip version |
+
+Three decisions worth knowing:
+
+- **Short string lists stay as `text[]`** (bio paragraphs, project bullets, tech
+  stack). They are ordered, always read whole and never queried individually, so
+  a join table would add work and buy nothing. Lists with real structure — a
+  label *and* a value — get tables: `profile_facts`, `skills`, `education_results`.
+- **One featured project is enforced by a partial unique index**, not just the
+  API validator. Note it enforces *at most* one; Postgres cannot express
+  "exactly one" as a constraint, so the API keeps the zero case.
+- **RLS is not optional on Supabase.** The anon key ships to the browser, so
+  without policies it is a write credential for the whole database. Content
+  tables are public-read only. `contact_messages` is insert-only with **no**
+  select policy — otherwise any visitor could read every message ever sent to
+  you. Writes go through the service-role key on the server.
+
+Nothing in the app reads these tables yet; wiring it up is a separate step.
+
 ## Structure
 
 ```

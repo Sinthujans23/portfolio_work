@@ -6,14 +6,11 @@ import { ArrowUpRight, Check } from "lucide-react";
 import SectionHeading from "./SectionHeading";
 import Reveal from "./Reveal";
 import { GithubIcon, LinkedinIcon } from "./SocialIcons";
-import { personalInfo } from "@/lib/data";
-
-const FORM_ID = process.env.NEXT_PUBLIC_FORMSPREE_ID;
-const formConfigured = Boolean(FORM_ID && FORM_ID !== "your_form_id_here");
+import type { Profile } from "@/lib/content";
 
 type Status = "idle" | "sending" | "sent" | "error";
 
-export default function Contact() {
+export default function Contact({ personalInfo }: { personalInfo: Profile }) {
   const [form, setForm] = useState({ name: "", email: "", message: "" });
   const [status, setStatus] = useState<Status>("idle");
 
@@ -24,19 +21,9 @@ export default function Contact() {
   const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    // Without a form backend configured, hand the message to the visitor's
-    // mail client rather than pretending it was delivered.
-    if (!formConfigured) {
-      const body = `${form.message}\n\n— ${form.name} (${form.email})`;
-      window.location.href = `mailto:${personalInfo.email}?subject=${encodeURIComponent(
-        `Portfolio enquiry from ${form.name}`
-      )}&body=${encodeURIComponent(body)}`;
-      return;
-    }
-
     setStatus("sending");
     try {
-      const res = await fetch(`https://formspree.io/f/${FORM_ID}`, {
+      const res = await fetch("/api/contact", {
         method: "POST",
         headers: { "Content-Type": "application/json", Accept: "application/json" },
         body: JSON.stringify(form),
@@ -228,11 +215,6 @@ export default function Contact() {
                     )}
                     {status === "sending" ? "Sending…" : "Send message"}
                   </motion.button>
-                  {!formConfigured && (
-                    <p className="text-xs" style={{ color: "var(--text-3)" }}>
-                      Opens in your mail client.
-                    </p>
-                  )}
                 </div>
               </form>
             )}

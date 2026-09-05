@@ -3,11 +3,11 @@
 import { motion } from "framer-motion";
 import { ArrowUp } from "lucide-react";
 import { GithubIcon, LinkedinIcon } from "./SocialIcons";
-import { personalInfo } from "@/lib/data";
+import type { Profile } from "@/lib/content";
 
 const spring = { type: "spring", stiffness: 400, damping: 22 } as const;
 
-export default function Footer() {
+export default function Footer({ personalInfo }: { personalInfo: Profile }) {
   const socials = [
     { Icon: GithubIcon, href: personalInfo.github, label: "GitHub", hue: "var(--c-violet)" },
     { Icon: LinkedinIcon, href: personalInfo.linkedin, label: "LinkedIn", hue: "var(--c-blue)" },

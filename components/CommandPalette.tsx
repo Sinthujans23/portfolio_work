@@ -3,7 +3,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { CornerDownLeft, Hash, Search, Zap } from "lucide-react";
-import { navLinks, personalInfo } from "@/lib/data";
+import { navLinks } from "@/lib/data";
+import type { Profile } from "@/lib/content";
 import { goToSection, goToTop } from "@/lib/nav";
 
 type Item = { label: string; kind: "section" | "action"; run: () => void };
@@ -22,23 +23,27 @@ const SECTIONS: Item[] = [
   })),
 ];
 
-const ACTIONS: Item[] = [
-  {
-    label: "Download résumé",
-    kind: "action",
-    run: () => {
-      const a = document.createElement("a");
-      a.href = "/cv.pdf";
-      a.download = "";
-      a.click();
+// Actions depend on the profile, which now comes from the database, so they
+// are built per render rather than at module scope.
+function buildActions(profile: Profile): Item[] {
+  return [
+    {
+      label: "Download résumé",
+      kind: "action",
+      run: () => {
+        const a = document.createElement("a");
+        a.href = "/cv.pdf";
+        a.download = "";
+        a.click();
+      },
     },
-  },
-  { label: "Send email", kind: "action", run: () => window.open(`mailto:${personalInfo.email}`) },
-  { label: "Open GitHub", kind: "action", run: () => window.open(personalInfo.github, "_blank") },
-  { label: "Open LinkedIn", kind: "action", run: () => window.open(personalInfo.linkedin, "_blank") },
-];
+    { label: "Send email", kind: "action", run: () => window.open(`mailto:${profile.email}`) },
+    { label: "Open GitHub", kind: "action", run: () => window.open(profile.github, "_blank") },
+    { label: "Open LinkedIn", kind: "action", run: () => window.open(profile.linkedin, "_blank") },
+  ];
+}
 
-export default function CommandPalette() {
+export default function CommandPalette({ personalInfo }: { personalInfo: Profile }) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [cursor, setCursor] = useState(0);
@@ -68,8 +73,10 @@ export default function CommandPalette() {
 
   const items = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return [...SECTIONS, ...ACTIONS].filter((i) => i.label.toLowerCase().includes(q));
-  }, [query]);
+    return [...SECTIONS, ...buildActions(personalInfo)].filter((i) =>
+      i.label.toLowerCase().includes(q)
+    );
+  }, [query, personalInfo]);
 
   const select = (item: Item) => {
     item.run();
